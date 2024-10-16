@@ -8,9 +8,11 @@ use Awcodes\FilamentGravatar\GravatarPlugin;
 use Awcodes\FilamentGravatar\GravatarProvider;
 use BezhanSalleh\FilamentExceptions\FilamentExceptionsPlugin;
 use Croustibat\FilamentJobsMonitor\FilamentJobsMonitorPlugin;
+use Filament\FontProviders\GoogleFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -34,16 +36,19 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->spa()
             ->login(Login::class)
             ->profile()
-            ->spa()
+            ->passwordReset()
             ->databaseNotifications()
+            ->unsavedChangesAlerts()
             ->plugins([
                 BreezyCore::make()
                     ->myProfile(
                         shouldRegisterUserMenu: true,
                         shouldRegisterNavigation: false,
-                        hasAvatars: false
+                        hasAvatars: false,
+                        slug: 'my-account',
                     )
                     ->enableTwoFactorAuthentication(),
 
@@ -65,17 +70,23 @@ class AdminPanelProvider extends PanelProvider
 
                 GravatarPlugin::make(),
             ])
+            ->font('Space Grotesk', provider: GoogleFontProvider::class)
             ->defaultAvatarProvider(GravatarProvider::class)
             ->favicon(asset('/favicon-32x32.png'))
             ->brandLogo(fn () => view('components.logo'))
             ->navigationGroups([
-                'Collections',
-                'Media',
-                'Settings',
+                NavigationGroup::make()
+                    ->label('Collections'),
+                NavigationGroup::make()
+                    ->label('Media'),
+                NavigationGroup::make()
+                    ->label('Settings'),
             ])
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::hex('#904dff'),
             ])
+            //->topNavigation()
+            ->sidebarCollapsibleOnDesktop()
             ->viteTheme('resources/css/admin.css')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -86,6 +97,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
             ])
+            ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
